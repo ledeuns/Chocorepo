@@ -1,11 +1,9 @@
 #! /usr/bin/env python
-"""Creates an OData service from weather data"""
-
 REPO_DB = 'dbrepo.db'
 STREAM_DB = 'dbstream.db'
 
 SERVICE_PORT = 8080
-SERVICE_ROOT = "http://chocopkg/"
+SERVICE_ROOT = "http://chocopkg/nuget/"
 SERVE_ADDRESS = "127.0.0.1"
 
 import logging
@@ -23,7 +21,6 @@ import pyslet.odata2.metadata as edmx
 import pyslet.http.params as params
 from pyslet.odata2.server import ReadOnlyServer
 from pyslet.odata2.sqlds import *
-#from pyslet.odata2.memds import InMemoryEntityContainer
 import pyslet.http.client as http
 
 class FindPackagesByIdFunctionCollection(core.FunctionEntityCollection):
@@ -83,6 +80,11 @@ def MakeContainer(doc, drop=False, path=REPO_DB):
 
     return doc.root.DataServices['NuGetGallery.FeedContext_x0060_1']
 
+def runChocoServer(ChocoApp=None):
+    server = make_server(SERVE_ADDRESS, SERVICE_PORT, ChocoApp)
+    logging.info("HTTP server on port %i running" % SERVICE_PORT)
+    server.serve_forever()
+
 
 def main():
     """Executed when we are launched"""
@@ -91,9 +93,18 @@ def main():
     server = ReadOnlyServer(serviceRoot=SERVICE_ROOT)
     server.SetModel(doc)
 
-    srv = make_server(SERVE_ADDRESS, SERVICE_PORT, server)
-    logging.info("HTTP server on port %i running" % SERVICE_PORT)
-    srv.serve_forever()
+    # Run in foreground
+    #srv = make_server(SERVE_ADDRESS, SERVICE_PORT, server)
+    #logging.info("HTTP server on port %i running" % SERVICE_PORT)
+    #srv.serve_forever()
+
+    # Run daemonized
+    t = threading.Thread(
+        target=runChocoServer, kwargs={'ChocoApp': server})
+    t.setDaemon(True)
+    t.start()
+    t.join()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
