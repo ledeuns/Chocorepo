@@ -17,7 +17,7 @@ On your Linux box (e.g. 192.168.150.19) :
 (creates the db files)
 
 2- python import ../pkg/notepadplusplus.nupkg
-(imports Notepad++ package into the database
+(imports Notepad++ package into the database)
 
 3- python repo.py
 (starts Chocorepo)
